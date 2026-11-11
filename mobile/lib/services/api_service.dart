@@ -209,4 +209,59 @@ class ApiService {
       },
     );
   }
+
+  static Future<Map<String, dynamic>> updateRequestStatus({
+    required int requestId,
+    required String newStatus,
+    String remarks = '',
+    String rejectionReason = '',
+    String? deliveryMethod,
+    String? recipientName,
+    String? releaseNotes,
+  }) async {
+    final token = await getToken();
+    final url = Uri.parse('${AppConstants.baseUrl}/requests/$requestId/update-status/');
+    final body = <String, dynamic>{
+      'status': newStatus,
+      'remarks': remarks,
+      'rejection_reason': rejectionReason,
+    };
+    if (deliveryMethod != null) body['delivery_method'] = deliveryMethod;
+    if (recipientName != null) body['recipient_name'] = recipientName;
+    if (releaseNotes != null) body['release_notes'] = releaseNotes;
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final data = jsonDecode(response.body);
+      throw Exception(data['detail'] ?? 'Failed to update request status.');
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchStats() async {
+    final token = await getToken();
+    final url = Uri.parse('${AppConstants.baseUrl}/requests/stats/');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch dashboard stats.');
+    }
+  }
 }

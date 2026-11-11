@@ -1,18 +1,30 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/staff_home_screen.dart';
 import 'services/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final token = await ApiService.getToken();
-  runApp(StudentDocumentApp(initialToken: token));
+  final user = await ApiService.getSavedUser();
+  runApp(StudentDocumentApp(initialToken: token, initialUser: user));
 }
 
 class StudentDocumentApp extends StatelessWidget {
   final String? initialToken;
+  final Map<String, dynamic>? initialUser;
 
-  const StudentDocumentApp({super.key, this.initialToken});
+  const StudentDocumentApp({super.key, this.initialToken, this.initialUser});
+
+  Widget _getHomeScreen() {
+    if (initialToken == null) return const LoginScreen();
+    final role = initialUser?['role'];
+    if (role == 'RECORDS_STAFF' || role == 'ADMIN') {
+      return const StaffHomeScreen();
+    }
+    return const HomeScreen();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +49,7 @@ class StudentDocumentApp extends StatelessWidget {
           ),
         ),
       ),
-      home: initialToken != null ? const HomeScreen() : const LoginScreen(),
+      home: _getHomeScreen(),
     );
   }
 }

@@ -8,6 +8,9 @@
 * **Backend**: Python 3.13, Django 6.1, Django REST Framework (DRF)
 * **Database**: PostgreSQL 18 (`document_request_db`) via Laragon
 * **Mobile**: Flutter 3.38, Dart 3.10 (Target: Android)
+* **Web Interfaces**: 
+  * **Dedicated Staff Portal**: Modern Bootstrap 5 web portal for Records Personnel (`/staff/dashboard/`)
+  * **System Administration**: Django Admin (`/admin/`)
 * **API Documentation**: OpenAPI 3.0 / Swagger UI (`drf-spectacular`)
 * **Security & Auth**: Token-based Authentication & Role Permissions (Student, Records Staff, Admin)
 
@@ -19,8 +22,8 @@ The database comes pre-populated with default document types and accounts for de
 
 | Role | Username | Password | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin` | `admin123` | Full access to Django admin portal (`/admin`) |
-| **Records Staff** | `staff` | `staff123` | Processes requests and updates statuses |
+| **Administrator** | `admin` | `admin123` | Full access to Django admin portal (`/admin/`) |
+| **Records Staff** | `staff` | `staff123` | Processes requests and records releases on Web & Mobile |
 | **Student** | `student1` | `student123` | Juan Dela Cruz (BSIT 4th Year) |
 
 ---
@@ -29,7 +32,7 @@ The database comes pre-populated with default document types and accounts for de
 
 ### 1. Start the PostgreSQL Database
 1. Open **Laragon**.
-2. Click **Start All** (ensure PostgreSQL and Apache/MySQL are green).
+2. Click **Start All** (ensure PostgreSQL is active).
 
 ---
 
@@ -47,7 +50,8 @@ python manage.py runserver 0.0.0.0:8000
 ```
 
 Once running:
-* **Admin Web Portal**: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+* **Registrar & Records Staff Web Portal**: [http://127.0.0.1:8000/staff/login/](http://127.0.0.1:8000/staff/login/)
+* **Django Admin**: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
 * **Interactive Swagger API Docs**: [http://127.0.0.1:8000/api/docs/](http://127.0.0.1:8000/api/docs/)
 * **ReDoc API Documentation**: [http://127.0.0.1:8000/api/redoc/](http://127.0.0.1:8000/api/redoc/)
 
@@ -59,39 +63,37 @@ python manage.py test documents
 ---
 
 ### 3. Run the Flutter Mobile App
-Open Android Studio, launch your **Android Emulator** (or connect a physical Android device with USB debugging enabled).
-
-In a terminal in `C:\MobileAppDev\FinalProject\mobile`:
+In a terminal:
 ```powershell
+# Enable USB forwarding (if using a physical phone over USB)
+adb reverse tcp:8000 tcp:8000
+
+cd C:\MobileAppDev\FinalProject\mobile
 flutter run
-```
-
-*Note for Android Emulator*: The app is pre-configured to connect to `http://10.0.2.2:8000/api` (the emulator loopback for your PC's localhost). If running on a physical phone over Wi-Fi, change `baseUrl` in [`mobile/lib/config/constants.dart`](file:///C:/MobileAppDev/FinalProject/mobile/lib/config/constants.dart) to your PC's local IP address (e.g. `http://192.168.1.XX:8000/api`).
-
-To run mobile tests:
-```powershell
-flutter test
 ```
 
 ---
 
-## 🔄 Mandatory Capstone Demonstration Workflow
+## 🖥️ Staff Interfaces Available
 
-1. **Student Request in Flutter**:
-   * Open the Flutter app.
-   * Log in using `student1` / `student123` (or click "Use Demo Student").
-   * Go to **New Request**, select a document (e.g., *Transcript of Records*), enter purpose, and submit.
-   * Observe the unique tracking number generated (e.g., `DOC-202611-XXXX`).
+### A. Dedicated Web Portal (Desktop / Registrar Counter)
+* Access at: [http://127.0.0.1:8000/staff/login/](http://127.0.0.1:8000/staff/login/)
+* Sign in with: `staff` / `staff123`
+* Features:
+  * **Real-time KPI Cards**: Total requests, Under Verification, For Processing, Ready for Release, Released.
+  * **Processing Queue**: Search by tracking number or student name, filter by status.
+  * **Step-by-step Actions**:
+    * *Start Verification*
+    * *Approve & Send to Printing / Processing*
+    * *Mark as Ready for Release* (with counter/pickup instructions)
+    * *Record Official Release Transaction* (recipient name, delivery method, notes)
+    * *Reject Deficient Request* (with clear feedback message)
+  * **Full Audit Trail**: Visual timeline of all state transitions and timestamps.
 
-2. **Verification & Processing in Django Admin**:
-   * Open [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/) in Chrome.
-   * Log in with `admin` / `admin123`.
-   * Navigate to **Document Requests**.
-   * Open the submitted request or select it using the checkbox action to transition:
-     `Submitted` $\rightarrow$ `Under Verification` $\rightarrow$ `For Processing` $\rightarrow$ `Ready for Release` $\rightarrow$ `Released`.
-
-3. **Observe Live Result in Flutter**:
-   * Switch back to the mobile app and pull down to refresh the **Requests** tab.
-   * The status badge updates in real time.
-   * Tap the request to see the audit trail / status transition timeline and release details.
-   * Check the **Alerts** tab for instant status notification.
+### B. Mobile Staff Workflow (On the Go / Android Phone)
+* In the Flutter app, sign out (from the Profile tab) and tap **"Staff Demo"** (or log in with `staff` / `staff123`).
+* The app automatically switches to **Staff Mode**:
+  * **Queue Tab**: View and search all incoming requests from students.
+  * **Staff Detail Screen**: Perform workflow actions directly from the phone.
+  * **Analytics Tab**: Live processing metrics and breakdown.
+  * **Staff Profile Tab**: Employee details and department.

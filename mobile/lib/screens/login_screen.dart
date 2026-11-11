@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
+import 'staff_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,10 +25,18 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _fillDemoAccount() {
+  void _fillDemoStudent() {
     setState(() {
       _usernameController.text = 'student1';
       _passwordController.text = 'student123';
+      _errorMessage = null;
+    });
+  }
+
+  void _fillDemoStaff() {
+    setState(() {
+      _usernameController.text = 'staff';
+      _passwordController.text = 'staff123';
       _errorMessage = null;
     });
   }
@@ -41,16 +50,25 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await ApiService.login(
+      final res = await ApiService.login(
         _usernameController.text.trim(),
         _passwordController.text.trim(),
       );
 
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+
+      final role = res['user']?['role'];
+      if (role == 'RECORDS_STAFF' || role == 'ADMIN') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const StaffHomeScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceAll('Exception: ', '');
@@ -171,13 +189,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  OutlinedButton.icon(
-                    onPressed: _fillDemoAccount,
-                    icon: const Icon(Icons.vpn_key_outlined, size: 18),
-                    label: const Text('Use Demo Student (student1)'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _fillDemoStudent,
+                          icon: const Icon(Icons.school_outlined, size: 16),
+                          label: const Text('Student Demo', style: TextStyle(fontSize: 12)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _fillDemoStaff,
+                          icon: const Icon(Icons.badge_outlined, size: 16),
+                          label: const Text('Staff Demo', style: TextStyle(fontSize: 12)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 

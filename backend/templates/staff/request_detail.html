@@ -1,0 +1,282 @@
+{% extends 'staff/base.html' %}
+
+{% block title %}Request {{ req.tracking_number }} • Review & Process{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'staff-dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Queue
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Request & Student Details -->
+    <div class="col-lg-8">
+        <!-- Main Request Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-light text-dark border fs-6 font-monospace me-2">{{ req.tracking_number }}</span>
+                    <span class="badge badge-{{ req.status }} px-3 py-2 rounded-pill">{{ req.get_status_display }}</span>
+                </div>
+                <div class="small text-muted">
+                    Submitted {{ req.created_at|date:"M d, Y • h:i A" }}
+                </div>
+            </div>
+            <div class="card-body p-4 pt-1">
+                <h4 class="fw-bold mb-3">{{ req.document_type.name }}</h4>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-muted small">Processing Fee</div>
+                            <div class="fs-5 fw-bold text-primary">PHP {{ req.document_type.fee }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-muted small">Number of Copies</div>
+                            <div class="fs-5 fw-bold">{{ req.copies }} copy/ies</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-muted small">Delivery Method</div>
+                            <div class="fs-5 fw-bold text-truncate">{{ req.get_delivery_method_display }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-bold">PURPOSE OF REQUEST</label>
+                    <div class="p-3 bg-light rounded-3 border-start border-4 border-primary">
+                        {{ req.purpose|linebreaksbr }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label text-muted small fw-bold">DOCUMENT TYPE REQUIREMENTS</label>
+                    <div class="small text-muted">
+                        {{ req.document_type.requirements_info }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Profile Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="fw-bold mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>Student Information</h6>
+            </div>
+            <div class="card-body p-4 pt-1">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Full Name</div>
+                        <div class="fw-bold fs-6">{{ req.student.get_full_name|default:req.student.username }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Student ID Number</div>
+                        <div class="fw-bold fs-6">{{ req.student.student_profile.student_id|default:'N/A' }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Course / Program</div>
+                        <div>{{ req.student.student_profile.course|default:'N/A' }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Year Level</div>
+                        <div>{{ req.student.student_profile.year_level|default:1 }} Year</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Contact Number</div>
+                        <div>{{ req.student.student_profile.contact_number|default:'N/A' }}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="text-muted small">Email Address</div>
+                        <div>{{ req.student.email }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit History Timeline -->
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Audit Trail & Status Transitions</h6>
+            </div>
+            <div class="card-body p-4 pt-1">
+                <div class="timeline ps-3 border-start border-2 border-primary-subtle ms-2">
+                    {% for h in req.history.all %}
+                    <div class="position-relative mb-4">
+                        <div class="position-absolute" style="left: -23px; top: 0;">
+                            <span class="badge rounded-circle bg-primary p-1"><i class="bi bi-check text-white"></i></span>
+                        </div>
+                        <div class="fw-bold text-dark">{{ h.to_status }}</div>
+                        {% if h.remarks %}
+                            <div class="small text-secondary mt-1">{{ h.remarks }}</div>
+                        {% endif %}
+                        <div class="small text-muted mt-1">
+                            {{ h.timestamp|date:"M d, Y • h:i A" }} &bull; by {{ h.changed_by.get_full_name|default:h.changed_by.username|default:'System' }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-muted small">No status transition history recorded yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Workflow Action Processing Panel -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 20px;">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="fw-bold mb-0"><i class="bi bi-gear-fill me-2 text-primary"></i>Process Request Workflow</h6>
+            </div>
+            <div class="card-body p-4 pt-1">
+                <div class="mb-3 text-muted small">
+                    Assigned Staff: <strong>{{ req.assigned_staff.get_full_name|default:req.assigned_staff.username|default:'Unassigned' }}</strong>
+                </div>
+
+                {% if req.status == 'SUBMITTED' %}
+                    <div class="alert alert-info small mb-3">
+                        <i class="bi bi-info-circle me-1"></i> This request has just been submitted by the student and is waiting for initial review.
+                    </div>
+                    <form method="POST" action="{% url 'staff-request-action' req.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="START_VERIFICATION">
+                        <button type="submit" class="btn btn-warning w-100 py-2 fw-semibold mb-2">
+                            <i class="bi bi-search me-1"></i> Start Verification
+                        </button>
+                    </form>
+
+                {% elif req.status == 'UNDER_VERIFICATION' %}
+                    <div class="alert alert-warning small mb-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Check student clearances and academic records before proceeding.
+                    </div>
+                    <form method="POST" action="{% url 'staff-request-action' req.pk %}" class="mb-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="APPROVE_FOR_PROCESSING">
+                        <div class="mb-2">
+                            <label class="form-label small text-muted">Processing Remarks (optional)</label>
+                            <input type="text" name="remarks" class="form-control form-control-sm" placeholder="e.g. Cleared, sending to print">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="bi bi-printer me-1"></i> Send to Processing & Printing
+                        </button>
+                    </form>
+
+                    <button type="button" class="btn btn-outline-danger w-100 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle me-1"></i> Reject Deficient Request
+                    </button>
+
+                {% elif req.status == 'FOR_PROCESSING' %}
+                    <div class="alert alert-primary small mb-3">
+                        <i class="bi bi-printer-fill me-1"></i> Document is currently being printed, stamped, and signed.
+                    </div>
+                    <form method="POST" action="{% url 'staff-request-action' req.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="MARK_READY">
+                        <div class="mb-2">
+                            <label class="form-label small text-muted">Pickup Location / Counter Notes</label>
+                            <input type="text" name="remarks" class="form-control form-control-sm" placeholder="e.g. Ready for claim at Counter 2" value="Document printed and stamped. Ready for release at Counter 2.">
+                        </div>
+                        <button type="submit" class="btn btn-info text-white w-100 py-2 fw-semibold">
+                            <i class="bi bi-inbox me-1"></i> Mark as Ready for Release
+                        </button>
+                    </form>
+
+                {% elif req.status == 'READY_FOR_RELEASE' %}
+                    <div class="alert alert-success small mb-3">
+                        <i class="bi bi-check-circle me-1"></i> Document is ready for the student to claim or dispatch.
+                    </div>
+                    <button type="button" class="btn btn-success w-100 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#releaseModal">
+                        <i class="bi bi-hand-thumbs-up me-1"></i> Record Official Release Transaction
+                    </button>
+
+                {% elif req.status == 'RELEASED' %}
+                    <div class="p-3 bg-success-subtle text-success rounded-3 border border-success-subtle mb-3">
+                        <div class="fw-bold"><i class="bi bi-check2-all me-1"></i> Document Released</div>
+                        <div class="small mt-1">Recipient: {{ req.recipient_name }}</div>
+                        <div class="small">Method: {{ req.get_delivery_method_display }}</div>
+                        <div class="small">Released at: {{ req.released_at|date:"M d, Y • h:i A" }}</div>
+                        {% if req.release_notes %}
+                            <div class="small text-muted mt-1">Notes: {{ req.release_notes }}</div>
+                        {% endif %}
+                    </div>
+
+                {% elif req.status == 'REJECTED' %}
+                    <div class="p-3 bg-danger-subtle text-danger rounded-3 border border-danger-subtle mb-3">
+                        <div class="fw-bold"><i class="bi bi-x-octagon me-1"></i> Request Rejected</div>
+                        <div class="small mt-1">Reason: {{ req.rejection_reason }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Reject Request -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" action="{% url 'staff-request-action' req.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="REJECT">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger"><i class="bi bi-exclamation-octagon me-1"></i> Reject Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">The student will be notified with this reason through their mobile app.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Deficiency / Rejection Reason</label>
+                        <textarea name="rejection_reason" class="form-control" rows="3" required placeholder="e.g. Incomplete university clearance or unpaid library fee."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Record Official Release -->
+<div class="modal fade" id="releaseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" action="{% url 'staff-request-action' req.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="RECORD_RELEASE">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-success"><i class="bi bi-patch-check me-1"></i> Record Document Release</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Recipient Full Name</label>
+                        <input type="text" name="recipient_name" class="form-control" value="{{ req.student.get_full_name|default:req.student.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Delivery / Release Method</label>
+                        <select name="delivery_method" class="form-select">
+                            <option value="PICKUP" {% if req.delivery_method == 'PICKUP' %}selected{% endif %}>Personal Pickup (Counter)</option>
+                            <option value="COURIER" {% if req.delivery_method == 'COURIER' %}selected{% endif %}>Courier / Postal Mail</option>
+                            <option value="DIGITAL_COPY" {% if req.delivery_method == 'DIGITAL_COPY' %}selected{% endif %}>Digital / Soft Copy Released</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Release Notes / Tracking / Counter Details</label>
+                        <textarea name="release_notes" class="form-control" rows="2" placeholder="e.g. Verified with student ID card. Handed over at Counter 2."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Complete & Record Release</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
