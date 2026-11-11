@@ -1,0 +1,23 @@
+# Python & Django
+backend/venv/
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*.pyc
+backend/db.sqlite3
+backend/media/attachments/
+*.log
+
+# Flutter & Dart
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
