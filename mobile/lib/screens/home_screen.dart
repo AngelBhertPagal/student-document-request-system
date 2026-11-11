@@ -470,6 +470,7 @@ class _NewRequestTabState extends State<_NewRequestTab> {
 
               // Document Selection
               DropdownButtonFormField<int>(
+                isExpanded: true,
                 initialValue: _selectedDocTypeId,
                 decoration: const InputDecoration(
                   labelText: 'Select Document Type',
@@ -479,7 +480,11 @@ class _NewRequestTabState extends State<_NewRequestTab> {
                 items: _docTypes.map<DropdownMenuItem<int>>((doc) {
                   return DropdownMenuItem<int>(
                     value: doc['id'],
-                    child: Text('${doc['name']} (PHP ${doc['fee']})', overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      '${doc['name']} (PHP ${doc['fee']})',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   );
                 }).toList(),
                 onChanged: (val) {
@@ -533,6 +538,7 @@ class _NewRequestTabState extends State<_NewRequestTab> {
 
               // Delivery Method
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _deliveryMethod,
                 decoration: const InputDecoration(
                   labelText: 'Preferred Release / Delivery Method',

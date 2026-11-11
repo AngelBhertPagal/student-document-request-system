@@ -156,6 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 14),
 
                 DropdownButtonFormField<int>(
+                  isExpanded: true,
                   initialValue: _yearLevel,
                   decoration: const InputDecoration(
                     labelText: 'Year Level',
