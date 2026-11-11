@@ -114,6 +114,18 @@ class DocumentRequest(models.Model):
     def __str__(self):
         return f"{self.tracking_number} - {self.document_type.name} ({self.status})"
 
+    @property
+    def assigned_staff_name(self):
+        if self.assigned_staff:
+            return self.assigned_staff.get_full_name() or self.assigned_staff.username
+        return 'Unassigned'
+
+    @property
+    def student_name(self):
+        if self.student:
+            return self.student.get_full_name() or self.student.username
+        return 'Unknown'
+
 
 class RequestAttachment(models.Model):
     request = models.ForeignKey(DocumentRequest, on_delete=models.CASCADE, related_name='attachments')
@@ -135,6 +147,12 @@ class RequestStatusHistory(models.Model):
 
     class Meta:
         ordering = ['timestamp']
+
+    @property
+    def changed_by_name(self):
+        if self.changed_by:
+            return self.changed_by.get_full_name() or self.changed_by.username
+        return 'System'
 
     def __str__(self):
         return f"{self.request.tracking_number}: {self.from_status} -> {self.to_status}"

@@ -109,7 +109,7 @@
                             </span>
                         </td>
                         <td>
-                            <div class="fw-bold">{{ req.student.get_full_name|default:req.student.username }}</div>
+                            <div class="fw-bold">{{ req.student_name }}</div>
                             <div class="small text-muted">{{ req.student.student_profile.student_id|default:'N/A' }} &bull; {{ req.student.student_profile.course|truncatechars:24 }}</div>
                         </td>
                         <td>

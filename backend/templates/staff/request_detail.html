@@ -72,7 +72,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="text-muted small">Full Name</div>
-                        <div class="fw-bold fs-6">{{ req.student.get_full_name|default:req.student.username }}</div>
+                        <div class="fw-bold fs-6">{{ req.student_name }}</div>
                     </div>
                     <div class="col-md-6">
                         <div class="text-muted small">Student ID Number</div>
@@ -115,7 +115,7 @@
                             <div class="small text-secondary mt-1">{{ h.remarks }}</div>
                         {% endif %}
                         <div class="small text-muted mt-1">
-                            {{ h.timestamp|date:"M d, Y • h:i A" }} &bull; by {{ h.changed_by.get_full_name|default:h.changed_by.username|default:'System' }}
+                            {{ h.timestamp|date:"M d, Y • h:i A" }} &bull; by {{ h.changed_by_name }}
                         </div>
                     </div>
                     {% empty %}
@@ -134,7 +134,7 @@
             </div>
             <div class="card-body p-4 pt-1">
                 <div class="mb-3 text-muted small">
-                    Assigned Staff: <strong>{{ req.assigned_staff.get_full_name|default:req.assigned_staff.username|default:'Unassigned' }}</strong>
+                    Assigned Staff: <strong>{{ req.assigned_staff_name }}</strong>
                 </div>
 
                 {% if req.status == 'SUBMITTED' %}
@@ -256,7 +256,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Recipient Full Name</label>
-                        <input type="text" name="recipient_name" class="form-control" value="{{ req.student.get_full_name|default:req.student.username }}" required>
+                        <input type="text" name="recipient_name" class="form-control" value="{{ req.student_name }}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Delivery / Release Method</label>
