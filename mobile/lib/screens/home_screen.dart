@@ -372,7 +372,12 @@ class _NewRequestTabState extends State<_NewRequestTab> {
             children: [
               Icon(Icons.check_circle, color: Colors.green),
               SizedBox(width: 8),
-              Text('Request Submitted!'),
+              Expanded(
+                child: Text(
+                  'Request Submitted!',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           content: Column(
@@ -382,6 +387,7 @@ class _NewRequestTabState extends State<_NewRequestTab> {
               const Text('Your request has been successfully recorded.'),
               const SizedBox(height: 12),
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.blue[50],
@@ -391,7 +397,8 @@ class _NewRequestTabState extends State<_NewRequestTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Tracking Number:', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    Text(
+                    const SizedBox(height: 2),
+                    SelectableText(
                       result['tracking_number'] ?? 'N/A',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
                     ),

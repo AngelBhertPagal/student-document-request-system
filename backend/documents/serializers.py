@@ -171,10 +171,24 @@ class DocumentRequestDetailSerializer(serializers.ModelSerializer):
 
 class CreateDocumentRequestSerializer(serializers.ModelSerializer):
     attachment = serializers.FileField(required=False, write_only=True)
+    tracking_number = serializers.CharField(read_only=True)
+    id = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = DocumentRequest
-        fields = ['document_type', 'copies', 'purpose', 'delivery_method', 'attachment']
+        fields = [
+            'id',
+            'tracking_number',
+            'document_type',
+            'copies',
+            'purpose',
+            'delivery_method',
+            'status',
+            'created_at',
+            'attachment',
+        ]
 
     def create(self, validated_data):
         attachment_file = validated_data.pop('attachment', None)
