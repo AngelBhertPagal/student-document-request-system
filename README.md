@@ -97,3 +97,13 @@ flutter run
   * **Staff Detail Screen**: Perform workflow actions directly from the phone.
   * **Analytics Tab**: Live processing metrics and breakdown.
   * **Staff Profile Tab**: Employee details and department.
+
+---
+
+## 📚 Technical Documentation (`docs/`)
+Ready-to-submit capstone documentation matching all evaluation checklist requirements:
+1. [SRS, Scope, Problem Statement & Objectives](docs/01_SRS_and_Scope.md)
+2. [Use-Case Model & Interface Wireframes](docs/02_Use_Case_Model_and_Wireframes.md)
+3. [System Architecture, Workflow State Machine, ERD & Data Dictionary](docs/03_Architecture_ERD_and_Data_Dictionary.md)
+4. [REST API Reference & QA Test Results Report](docs/04_API_Reference_and_Test_Results.md)
+5. [Deployment Guide & User Manual](docs/05_Deployment_Guide_and_User_Manual.md)
