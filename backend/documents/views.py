@@ -1,4 +1,4 @@
-from rest_framework import status, viewsets, permissions
+from rest_framework import status, viewsets, permissions, serializers as drf_serializers
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from .models import (
     DocumentType,
@@ -47,8 +47,22 @@ def register_student(request):
 
 
 @extend_schema(
-    request={'application/json': {'type': 'object', 'properties': {'username': {'type': 'string'}, 'password': {'type': 'string'}}}},
-    responses={200: {'type': 'object', 'properties': {'token': {'type': 'string'}, 'user': UserSerializer}}}
+    request=inline_serializer(
+        name='LoginRequest',
+        fields={
+            'username': drf_serializers.CharField(),
+            'password': drf_serializers.CharField(),
+        },
+    ),
+    responses={
+        200: inline_serializer(
+            name='LoginResponse',
+            fields={
+                'token': drf_serializers.CharField(),
+                'user': UserSerializer(),
+            },
+        )
+    },
 )
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
@@ -71,6 +85,15 @@ def login_view(request):
     })
 
 
+@extend_schema(
+    request=None,
+    responses={
+        200: inline_serializer(
+            name='LogoutResponse',
+            fields={'detail': drf_serializers.CharField()},
+        )
+    },
+)
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
@@ -79,6 +102,7 @@ def logout_view(request):
     return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)
 
 
+@extend_schema(responses={200: UserSerializer})
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def current_user_profile(request):
