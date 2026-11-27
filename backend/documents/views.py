@@ -71,6 +71,14 @@ def login_view(request):
     })
 
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def logout_view(request):
+    """Revoke the current user's authentication token."""
+    Token.objects.filter(user=request.user).delete()
+    return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def current_user_profile(request):
@@ -85,6 +93,20 @@ class DocumentTypeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.AllowAny]
 
 
+ALLOWED_STATUS_TRANSITIONS = {
+    RequestStatus.SUBMITTED: {RequestStatus.UNDER_VERIFICATION, RequestStatus.REJECTED},
+    RequestStatus.UNDER_VERIFICATION: {RequestStatus.FOR_PROCESSING, RequestStatus.REJECTED},
+    RequestStatus.FOR_PROCESSING: {RequestStatus.READY_FOR_RELEASE, RequestStatus.REJECTED},
+    RequestStatus.READY_FOR_RELEASE: {RequestStatus.RELEASED, RequestStatus.REJECTED},
+    RequestStatus.RELEASED: set(),
+    RequestStatus.REJECTED: set(),
+}
+
+
+def _is_staff_user(user):
+    return bool(user and (user.is_staff or user.is_superuser or hasattr(user, 'staff_profile')))
+
+
 class DocumentRequestViewSet(viewsets.ModelViewSet):
     """Manage student document requests, status transitions, and history."""
     permission_classes = [permissions.IsAuthenticated]
@@ -94,7 +116,7 @@ class DocumentRequestViewSet(viewsets.ModelViewSet):
         queryset = DocumentRequest.objects.all().select_related('document_type', 'student', 'student__student_profile')
 
         # Students only see their own requests; staff and admin see all
-        if not (user.is_staff or user.is_superuser or hasattr(user, 'staff_profile')):
+        if not _is_staff_user(user):
             queryset = queryset.filter(student=user)
 
         # Optional filters
@@ -118,6 +140,30 @@ class DocumentRequestViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(student=self.request.user)
 
+    def update(self, request, *args, **kwargs):
+        if not _is_staff_user(request.user):
+            return Response(
+                {'detail': 'Students cannot directly modify submitted requests.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not _is_staff_user(request.user):
+            return Response(
+                {'detail': 'Students cannot directly modify submitted requests.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not _is_staff_user(request.user):
+            return Response(
+                {'detail': 'Students cannot delete submitted requests.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'], url_path='update-status', permission_classes=[permissions.IsAuthenticated])
     def update_status(self, request, pk=None):
         """Update the workflow status of a request (Staff/Admin only)."""
@@ -125,8 +171,7 @@ class DocumentRequestViewSet(viewsets.ModelViewSet):
         user = request.user
 
         # Only staff or admins can update workflow status
-        is_staff = user.is_staff or user.is_superuser or hasattr(user, 'staff_profile')
-        if not is_staff:
+        if not _is_staff_user(user):
             return Response({'detail': 'Only records personnel or administrators can update request status.'}, status=status.HTTP_403_FORBIDDEN)
 
         new_status = request.data.get('status')
@@ -140,6 +185,15 @@ class DocumentRequestViewSet(viewsets.ModelViewSet):
             return Response({'detail': f'Invalid status. Allowed values: {RequestStatus.values}'}, status=status.HTTP_400_BAD_REQUEST)
 
         old_status = doc_request.status
+        allowed_next = ALLOWED_STATUS_TRANSITIONS.get(old_status, set())
+        if new_status not in allowed_next:
+            return Response(
+                {
+                    'detail': f'Invalid workflow transition from {old_status} to {new_status}. '
+                              f'Allowed next statuses: {sorted(allowed_next) if allowed_next else "None (terminal state)"}.'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         doc_request.status = new_status
         doc_request.assigned_staff = user
 

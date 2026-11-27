@@ -5,7 +5,9 @@ import 'register_screen.dart';
 import 'staff_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? initialMessage;
+
+  const LoginScreen({super.key, this.initialMessage});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -17,6 +19,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _errorMessage = widget.initialMessage;
+  }
 
   @override
   void dispose() {

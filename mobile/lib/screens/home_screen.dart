@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
@@ -314,6 +315,8 @@ class _NewRequestTabState extends State<_NewRequestTab> {
   bool _isLoadingTypes = true;
   bool _isSubmitting = false;
   String? _errorMessage;
+  String? _selectedFilePath;
+  String? _selectedFileName;
 
   @override
   void initState() {
@@ -325,6 +328,25 @@ class _NewRequestTabState extends State<_NewRequestTab> {
   void dispose() {
     _purposeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAttachment() async {
+    try {
+      final files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+      if (files.isNotEmpty && files.first.path != null) {
+        setState(() {
+          _selectedFilePath = files.first.path;
+          _selectedFileName = files.first.name;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Could not select file: $e';
+      });
+    }
   }
 
   Future<void> _fetchTypes() async {
@@ -339,7 +361,7 @@ class _NewRequestTabState extends State<_NewRequestTab> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Could not load document catalog.';
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
         _isLoadingTypes = false;
       });
     }
@@ -359,6 +381,7 @@ class _NewRequestTabState extends State<_NewRequestTab> {
         copies: _copies,
         purpose: _purposeController.text.trim(),
         deliveryMethod: _deliveryMethod,
+        attachmentPath: _selectedFilePath,
       );
 
       if (!mounted) return;
@@ -414,7 +437,11 @@ class _NewRequestTabState extends State<_NewRequestTab> {
               onPressed: () {
                 Navigator.pop(ctx);
                 _purposeController.clear();
-                _copies = 1;
+                setState(() {
+                  _copies = 1;
+                  _selectedFilePath = null;
+                  _selectedFileName = null;
+                });
                 widget.onRequestCreated();
               },
               child: const Text('View Requests'),
@@ -574,6 +601,61 @@ class _NewRequestTabState extends State<_NewRequestTab> {
                   alignLabelWithHint: true,
                 ),
                 validator: (val) => val == null || val.trim().isEmpty ? 'Please specify purpose' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Supporting Requirement Attachment Picker
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey.shade50,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Supporting Requirement (Optional)',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Accepted formats: PDF, JPG, PNG (Max 5 MB)',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_selectedFileName != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.attach_file, color: Colors.blue, size: 18),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _selectedFileName!,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                            onPressed: () {
+                              setState(() {
+                                _selectedFilePath = null;
+                                _selectedFileName = null;
+                              });
+                            },
+                          ),
+                        ],
+                      )
+                    else
+                      OutlinedButton.icon(
+                        onPressed: _pickAttachment,
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Attach ID / Clearance / Receipt'),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
 

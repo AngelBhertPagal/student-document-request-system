@@ -249,6 +249,31 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                       docType['requirements_info'] ?? 'Standard university clearance applies.',
                       style: TextStyle(color: Colors.grey[700], fontSize: 13),
                     ),
+                    if ((_details!['attachments'] as List<dynamic>? ?? []).isNotEmpty) ...[
+                      const Divider(height: 24),
+                      const Text('Attached Requirements', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      ...(_details!['attachments'] as List<dynamic>).map((att) {
+                        final rawFile = (att['file'] ?? '').toString();
+                        final fileName = rawFile.split('/').last;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.attach_file, size: 16, color: Colors.blue),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  fileName.isNotEmpty ? fileName : (att['file_type'] ?? 'Attachment'),
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
                   ],
                 ),
               ),

@@ -403,6 +403,30 @@ class _StaffRequestDetailScreenState extends State<StaffRequestDetailScreen> {
                   const Text('Stated Purpose', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   Text(_details!['purpose'] ?? 'None provided'),
+                  if ((_details!['attachments'] as List<dynamic>? ?? []).isNotEmpty) ...[
+                    const Divider(height: 20),
+                    const Text('Submitted Attachments', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    ...(_details!['attachments'] as List<dynamic>).map((att) {
+                      final rawFile = (att['file'] ?? '').toString();
+                      final fileName = rawFile.split('/').last;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.attach_file, size: 16, color: Colors.blue),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                fileName.isNotEmpty ? fileName : (att['file_type'] ?? 'Attachment'),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
                 ],
               ),
             ),

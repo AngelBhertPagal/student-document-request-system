@@ -176,6 +176,9 @@ class CreateDocumentRequestSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True)
 
+    ALLOWED_EXTENSIONS = ('.pdf', '.jpg', '.jpeg', '.png')
+    MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
+
     class Meta:
         model = DocumentRequest
         fields = [
@@ -189,6 +192,23 @@ class CreateDocumentRequestSerializer(serializers.ModelSerializer):
             'created_at',
             'attachment',
         ]
+
+    def validate_copies(self, value):
+        if value < 1 or value > 10:
+            raise serializers.ValidationError('Number of copies must be between 1 and 10.')
+        return value
+
+    def validate_attachment(self, value):
+        if value is None:
+            return value
+        name_lower = value.name.lower()
+        if not any(name_lower.endswith(ext) for ext in self.ALLOWED_EXTENSIONS):
+            raise serializers.ValidationError(
+                'Unsupported file type. Allowed formats: PDF, JPG, JPEG, PNG.'
+            )
+        if value.size > self.MAX_FILE_SIZE_BYTES:
+            raise serializers.ValidationError('File size must not exceed 5 MB.')
+        return value
 
     def create(self, validated_data):
         attachment_file = validated_data.pop('attachment', None)

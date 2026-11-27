@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     register_student,
     login_view,
+    logout_view,
     current_user_profile,
     DocumentTypeViewSet,
     DocumentRequestViewSet,
@@ -17,6 +18,7 @@ router.register(r'notifications', NotificationViewSet, basename='notifications')
 urlpatterns = [
     path('auth/register/', register_student, name='register-student'),
     path('auth/login/', login_view, name='login'),
+    path('auth/logout/', logout_view, name='logout'),
     path('auth/profile/', current_user_profile, name='current-user-profile'),
     path('', include(router.urls)),
 ]

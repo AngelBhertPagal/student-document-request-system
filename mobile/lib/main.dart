@@ -4,8 +4,25 @@ import 'screens/login_screen.dart';
 import 'screens/staff_home_screen.dart';
 import 'services/api_service.dart';
 
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  ApiService.onSessionExpired = () {
+    final nav = appNavigatorKey.currentState;
+    if (nav != null) {
+      nav.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const LoginScreen(
+            initialMessage: 'Your session has expired. Please sign in again.',
+          ),
+        ),
+        (route) => false,
+      );
+    }
+  };
+
   final token = await ApiService.getToken();
   final user = await ApiService.getSavedUser();
   runApp(StudentDocumentApp(initialToken: token, initialUser: user));
@@ -29,6 +46,7 @@ class StudentDocumentApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Student Document Request System',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
