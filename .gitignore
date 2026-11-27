@@ -5,6 +5,8 @@ backend/*/__pycache__/
 backend/*.pyc
 backend/db.sqlite3
 backend/media/attachments/
+backend/staticfiles/
+backend/.env
 *.log
 
 # Flutter & Dart
