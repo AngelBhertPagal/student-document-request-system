@@ -23,3 +23,6 @@ mobile/.pub/
 .idea/
 *.swp
 Thumbs.db
+
+# Reference files (keep local only)
+capstone-projects-finals.pdf
