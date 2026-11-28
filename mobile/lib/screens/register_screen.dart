@@ -10,6 +10,22 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  static const List<String> _courseOptions = [
+    'BS Information Technology',
+    'BS Computer Science',
+    'BS Information Systems',
+    'BS Accountancy',
+    'BS Business Administration',
+    'BS Civil Engineering',
+    'BS Electrical Engineering',
+    'BS Nursing',
+    'BS Psychology',
+    'BS Hospitality Management',
+    'BS Education',
+    'BS Criminology',
+    'Other (Specify)',
+  ];
+
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -17,7 +33,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _studentIdController = TextEditingController();
-  final _courseController = TextEditingController(text: 'BS Information Technology');
+  final _customCourseController = TextEditingController();
+  String _selectedCourse = _courseOptions.first;
   int _yearLevel = 1;
   final _contactController = TextEditingController();
 
@@ -32,7 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _studentIdController.dispose();
-    _courseController.dispose();
+    _customCourseController.dispose();
     _contactController.dispose();
     super.dispose();
   }
@@ -45,6 +62,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _errorMessage = null;
     });
 
+    final finalCourse = _selectedCourse == 'Other (Specify)'
+        ? _customCourseController.text.trim()
+        : _selectedCourse;
+
     try {
       await ApiService.register(
         username: _usernameController.text.trim(),
@@ -53,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         studentId: _studentIdController.text.trim(),
-        course: _courseController.text.trim(),
+        course: finalCourse,
         yearLevel: _yearLevel,
         contactNumber: _contactController.text.trim(),
       );
@@ -144,15 +165,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 14),
 
-                TextFormField(
-                  controller: _courseController,
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: _selectedCourse,
                   decoration: const InputDecoration(
                     labelText: 'Course / Degree Program',
                     prefixIcon: Icon(Icons.menu_book_outlined),
                     border: OutlineInputBorder(),
                   ),
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                  items: _courseOptions.map((c) {
+                    return DropdownMenuItem<String>(
+                      value: c,
+                      child: Text(c, overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedCourse = val);
+                  },
                 ),
+
+                if (_selectedCourse == 'Other (Specify)') ...[
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _customCourseController,
+                    decoration: const InputDecoration(
+                      labelText: 'Specify Your Degree Program',
+                      prefixIcon: Icon(Icons.edit_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) =>
+                        _selectedCourse == 'Other (Specify)' && (val == null || val.trim().isEmpty)
+                            ? 'Please enter your degree program'
+                            : null,
+                  ),
+                ],
                 const SizedBox(height: 14),
 
                 DropdownButtonFormField<int>(
